@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🥦 Veggie Variety Challenge</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{--bg:#0d1a0d;--surface:#141f14;--alt:#1a2a1a;--border:#243624;--accent:#72d94e;--dim:#4c9e32;--text:#d0ead0;--muted:#6a9f5a;--danger:#e05252}
+  body{background:var(--bg);color:var(--text);font-family:Arial,sans-serif;min-height:100vh;padding-bottom:60px}
+  h1{font-size:20px;color:var(--accent);letter-spacing:-.5px}
+  .header{padding:22px 20px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+  .sub{font-size:11px;color:var(--muted);margin-top:3px}
+  .wrap{max-width:740px;margin:0 auto;padding:0 14px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px;margin-top:14px}
+  .btn{background:transparent;color:var(--accent);border:1.5px solid var(--accent);border-radius:6px;padding:7px 14px;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600}
+  .btn:hover{opacity:.8}
+  .btn.p{background:var(--accent);color:var(--bg)}
+  .btn.d{background:var(--danger);color:#fff;border-color:var(--danger)}
+  .btn.sm{padding:3px 8px;font-size:11px}
+  input{background:var(--alt);border:1.5px solid var(--border);border-radius:6px;padding:9px 13px;color:var(--text);font-family:inherit;font-size:13px;outline:none;width:100%}
+  input:focus{border-color:var(--accent)}
+  .row{display:flex;gap:8px;align-items:center}
+  .lrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+  .bwrap{flex:1;height:22px;background:var(--alt);border-radius:4px;overflow:hidden;border:1px solid var(--border);cursor:pointer}
+  .bfill{height:100%;border-radius:4px;transition:width .5s;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;font-size:10px;font-weight:700;color:var(--bg)}
+  .chip{display:inline-flex;align-items:center;gap:4px;border-radius:20px;padding:3px 10px;font-size:11px;border:1px solid;margin:2px;cursor:pointer}
+  .vgrid{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;max-height:220px;overflow-y:auto}
+  .lbl{font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+  .wnav{display:flex;align-items:center;justify-content:space-between;margin-top:18px;padding:10px 14px;background:var(--surface);border-radius:8px;border:1px solid var(--border)}
+  .mbg{position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;z-index:100;padding:16px}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;max-width:500px;width:100%;max-height:85vh;overflow-y:auto}
+  .sbar{width:50px;background:var(--alt);border:1px solid var(--border);border-radius:6px;overflow:hidden;display:flex;flex-direction:column-reverse;position:relative;flex-shrink:0}
+  .sseg{width:100%;border-top:1px solid rgba(0,0,0,.2);flex-shrink:0}
+  .tline{position:absolute;top:0;left:0;right:0;border-top:2px dashed var(--accent);z-index:2}
+  #status{font-size:11px;color:var(--muted);margin-right:4px}
+  li{line-height:2.1}
+  .setup{max-width:520px;margin:40px auto;padding:0 20px}
+  .setup h2{color:var(--accent);margin-bottom:8px}
+  code{background:var(--alt);padding:2px 6px;border-radius:4px;color:var(--accent);font-size:12px;word-break:break-all}
+  a{color:var(--accent)}
+  .step{display:flex;gap:12px;margin-bottom:16px}
+  .stepn{background:var(--accent);color:var(--bg);border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;margin-top:2px}
+</style>
+</head>
+<body>
+
+<!-- SETUP -->
+<div id="S" style="display:none">
+  <div class="setup">
+    <h2>🥦 Veggie Variety Challenge</h2>
+    <p style="color:var(--muted);font-size:13px;line-height:1.7;margin:8px 0 20px">
+      Für Multi-User-Sync wird eine kostenlose Firebase-Datenbank benötigt.<br>Einmalige Einrichtung (~5 Min).
+    </p>
+
+    <div class="card" style="margin-top:0">
+      <div class="lbl" style="margin-bottom:14px">Firebase einrichten</div>
+
+      <div class="step">
+        <div class="stepn">1</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.7">
+          <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> öffnen →
+          <strong>„Projekt erstellen"</strong> → Namen eingeben → Google Analytics deaktivieren → Erstellen
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="stepn">2</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.7">
+          Im linken Menü: <strong>Erstellen → Realtime Database</strong> →
+          <strong>„Datenbank erstellen"</strong> → Region wählen →
+          <strong>„Im Testmodus starten"</strong> (30 Tage offen, reicht für den Test)
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="stepn">3</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.7">
+          Die angezeigte Datenbank-URL kopieren. Sie sieht so aus:<br>
+          <code>https://PROJEKTNAME-default-rtdb.firebaseio.com</code>
+        </div>
+      </div>
+
+      <div style="margin-top:8px">
+        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px">Firebase Datenbank-URL:</label>
+        <input id="fburl" type="text" placeholder="https://mein-projekt-default-rtdb.firebaseio.com">
+        <div style="font-size:11px;color:var(--muted);margin-top:6px">Wird lokal im Browser gespeichert – nicht geteilt.</div>
+      </div>
+
+      <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn p" onclick="setupNew()">Neue Challenge starten</button>
+        <button class="btn" onclick="setupJoin()">Bestehender Challenge beitreten</button>
+      </div>
+      <p id="serr" style="color:var(--danger);font-size:12px;margin-top:10px;display:none"></p>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="A" style="display:none">
+  <div class="header">
+    <div>
+      <h1>🥦 Veggie Variety Challenge</h1>
+      <div class="sub">30 Sorten · 7 Tage · Alle gegen alle</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <span id="status"></span>
+      <button class="btn" onclick="showModal('register-modal')">👤 Teilnehmer</button>
+      <button class="btn" onclick="showModal('catalog-modal');renderCatalogModal()">🥦 Datenbank</button>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="wnav">
+      <button class="btn" onclick="chWeek(-1)">←</button>
+      <div style="text-align:center">
+        <div id="wlabel" style="font-size:13px;font-weight:600"></div>
+        <div id="whint" style="font-size:10px;margin-top:2px"></div>
+      </div>
+      <button class="btn" id="btn-next" onclick="chWeek(1)">→</button>
+    </div>
+    <div class="card">
+      <div class="lbl">Rangliste <span id="lhint" style="color:var(--accent)"></span></div>
+      <div id="LB"></div>
+      <button onclick="doLoad(true)" style="margin-top:14px;width:100%;padding:12px;background:var(--alt);border:1.5px solid var(--accent);border-radius:8px;color:var(--accent);font-family:Arial,sans-serif;font-size:15px;font-weight:700;cursor:pointer;">
+        🔄 Aktualisieren
+      </button>
+    </div>
+    <div style="margin-top:20px;font-size:11px;color:var(--muted);text-align:center">
+      Firebase: <code id="fb-display" style="font-size:10px"></code> ·
+      <a href="#" onclick="resetSetup()" style="color:var(--muted)">Zurücksetzen</a>
+    </div>
+  </div>
+</div>
+
+<!-- PLAYER PAGE -->
+<div id="P" style="display:none">
+  <div class="header">
+    <div><h1 id="ptitle"></h1><div class="sub" id="psub"></div></div>
+    <button class="btn" onclick="closePage()">← Zurück</button>
+  </div>
+  <div class="wrap">
+    <div class="card" id="psum" style="display:flex;gap:20px;align-items:flex-end"></div>
+    <div id="pedit"></div>
+  </div>
+</div>
+
+<!-- CATALOG MODAL -->
+<div class="mbg" id="catalog-modal" style="display:none" onclick="this.style.display='none'">
+  <div class="modal" onclick="event.stopPropagation()" style="max-width:560px">
+    <h2 style="color:var(--accent);margin-bottom:4px;font-size:17px">🥦 Nahrungsmitteldatenbank</h2>
+    <p style="font-size:11px;color:var(--muted);margin-bottom:16px">Einträge antippen zum Entfernen. Basis-Sorten können nicht gelöscht werden.</p>
+    <div class="lbl">Basis-Sorten (40)</div>
+    <div id="cat-base" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:16px;max-height:160px;overflow-y:auto"></div>
+    <div class="lbl">Manuell ergänzte Sorten <span id="cat-custom-count" style="color:var(--accent)"></span></div>
+    <div id="cat-custom" style="display:flex;flex-wrap:wrap;gap:5px;min-height:32px"></div>
+    <button class="btn" onclick="document.getElementById('catalog-modal').style.display='none'" style="margin-top:18px">Schließen</button>
+  </div>
+</div>
+
+<!-- REGISTER MODAL -->
+<div class="mbg" id="register-modal" style="display:none" onclick="this.style.display='none'">
+  <div class="modal" style="max-width:400px" onclick="event.stopPropagation()">
+    <h2 style="color:var(--accent);margin-bottom:16px;font-size:17px">👤 Neuen Teilnehmer anmelden</h2>
+    <div class="row">
+      <input id="nname" type="text" placeholder="Name…" onkeydown="if(event.key==='Enter')register()">
+      <button class="btn p" onclick="register()" style="white-space:nowrap">Anmelden</button>
+    </div>
+    <button class="btn" onclick="document.getElementById('register-modal').style.display='none'" style="margin-top:16px">Schließen</button>
+  </div>
+</div>
+
+<!-- CONFIRM -->
+<div class="mbg" id="confirm" style="display:none">
+  <div class="modal" style="max-width:360px">
+    <p id="cmsg" style="font-size:14px;margin-bottom:20px"></p>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn" onclick="document.getElementById('confirm').style.display='none'">Abbrechen</button>
+      <button class="btn d" id="cok">Entfernen</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Katalog ──────────────────────────────────────────────────────────────────
+const BASE=[
+  {n:"Tomate",c:"#e74c3c",e:"🍅"},{n:"Gurke",c:"#27ae60",e:"🥒"},
+  {n:"Paprika (rot)",c:"#e67e22",e:"🫑"},{n:"Paprika (gelb)",c:"#f1c40f",e:"🫑"},
+  {n:"Paprika (grün)",c:"#2ecc71",e:"🫑"},{n:"Zucchini",c:"#82c341",e:"🥬"},
+  {n:"Karotte",c:"#e67e22",e:"🥕"},{n:"Brokkoli",c:"#1e8449",e:"🥦"},
+  {n:"Blumenkohl",c:"#f0ead6",e:"🥬"},{n:"Spinat",c:"#145a32",e:"🌿"},
+  {n:"Salat",c:"#52be80",e:"🥗"},{n:"Erbsen",c:"#58d68d",e:"🫛"},
+  {n:"Bohnen (grün)",c:"#1d8348",e:"🫘"},{n:"Mais",c:"#f9e79f",e:"🌽"},
+  {n:"Kürbis",c:"#e59866",e:"🎃"},{n:"Aubergine",c:"#7d3c98",e:"🍆"},
+  {n:"Rote Beete",c:"#922b21",e:"🫚"},{n:"Sellerie",c:"#a9cce3",e:"🌿"},
+  {n:"Lauch",c:"#a3e4d7",e:"🧅"},{n:"Zwiebel",c:"#d7bde2",e:"🧅"},
+  {n:"Knoblauch",c:"#fdebd0",e:"🧄"},{n:"Radieschen",c:"#f1948a",e:"🌶"},
+  {n:"Rettich",c:"#fadbd8",e:"🥬"},{n:"Fenchel",c:"#a9dfbf",e:"🌿"},
+  {n:"Kohlrabi",c:"#76d7c4",e:"🥬"},{n:"Pak Choi",c:"#1abc9c",e:"🥬"},
+  {n:"Mangold",c:"#d35400",e:"🌿"},{n:"Artischocke",c:"#7dcea0",e:"🌿"},
+  {n:"Spargel",c:"#a9cce3",e:"🌿"},{n:"Champignon",c:"#c39bd3",e:"🍄"},
+  {n:"Shiitake",c:"#7d6608",e:"🍄"},{n:"Portobello",c:"#784212",e:"🍄"},
+  {n:"Kichererbsen",c:"#f0b27a",e:"🫘"},{n:"Linsen",c:"#b7950b",e:"🫘"},
+  {n:"Edamame",c:"#52be80",e:"🫛"},{n:"Süßkartoffel",c:"#e67e22",e:"🥔"},
+  {n:"Topinambur",c:"#ca6f1e",e:"🥔"},{n:"Pastinake",c:"#f9f0d8",e:"🥕"},
+  {n:"Grüne Papaya",c:"#82e0aa",e:"🍈"},{n:"Brokkolini",c:"#239b56",e:"🥦"},
+];
+const COLS=["#e74c3c","#e67e22","#f1c40f","#2ecc71","#1abc9c","#3498db","#9b59b6","#e91e63","#00bcd4","#8bc34a"];
+const rndC=()=>COLS[Math.floor(Math.random()*COLS.length)];
+const allCat=()=>[...BASE,...(st.customVeggies||[]).map(v=>({n:v.name,c:v.color,e:v.emoji||'🥬'}))];
+const findV=name=>{const v=allCat().find(x=>x.n===name);return v||{c:"#888",e:"🥬"};};
+function x(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+
+// ── Wochen ───────────────────────────────────────────────────────────────────
+function isoW(d){const dt=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));dt.setUTCDate(dt.getUTCDate()+4-(dt.getUTCDay()||7));return Math.ceil(((dt-new Date(Date.UTC(dt.getUTCFullYear(),0,1)))/864e5+1)/7);}
+function wKey(date=new Date()){const d=new Date(date);d.setHours(0,0,0,0);const day=d.getDay();d.setDate(d.getDate()+(day===0?-6:1-day));return`${d.getFullYear()}-W${String(isoW(d)).padStart(2,'0')}`;}
+function wLabel(key){const[year,w]=key.split('-W'),week=parseInt(w);const jan4=new Date(parseInt(year),0,4),j=jan4.getDay()||7;const mon=new Date(jan4);mon.setDate(jan4.getDate()-j+1+(week-1)*7);const sun=new Date(mon);sun.setDate(mon.getDate()+6);const f=d=>d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'});return`KW ${week} · ${f(mon)}–${f(sun)} ${year}`;}
+function shiftW(key,n){const[year,w]=key.split('-W');const jan4=new Date(parseInt(year),0,4),j=jan4.getDay()||7;const mon=new Date(jan4);mon.setDate(jan4.getDate()-j+1+(parseInt(w)-1+n)*7);return wKey(mon);}
+
+// ── Firebase REST API ─────────────────────────────────────────────────────────
+// Firebase Realtime Database hat volle CORS-Unterstützung per REST – kein SDK nötig.
+// Alle Daten unter: {dbUrl}/veggie.json
+let dbUrl=''; // z.B. https://xxx-default-rtdb.firebaseio.com
+
+function fbUrl(){return dbUrl.replace(/\/+$/,'')+'/veggie.json';}
+
+async function doLoad(showMsg=false){
+  setStatus('…');
+  try{
+    const r=await fetch(fbUrl());
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    const data=await r.json();
+    // Firebase gibt null zurück wenn leer
+    st={
+      participants:(data&&data.participants)||[],
+      weeks:(data&&data.weeks)||{},
+      customVeggies:(data&&data.customVeggies)||[]
+    };
+    setStatus(showMsg?'✓':'');
+    if(showMsg)setTimeout(()=>setStatus(''),2000);
+    render();
+  }catch(e){
+    setStatus('⚠ Ladefehler');
+    console.error('load',e);
+  }
+}
+
+let saveTimer=null;
+function scheduleSave(){
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(doSave,700);
+}
+
+async function doSave(){
+  setStatus('speichert…');
+  try{
+    const r=await fetch(fbUrl(),{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(st)
+    });
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    setStatus('✓');
+    setTimeout(()=>setStatus(''),2500);
+  }catch(e){
+    setStatus('⚠ Fehler');
+    console.error('save',e);
+  }
+}
+
+function setStatus(m){document.getElementById('status').textContent=m;}
+
+// ── Setup ─────────────────────────────────────────────────────────────────────
+function getUrl(){
+  let u=document.getElementById('fburl').value.trim();
+  if(!u){showErr('Bitte Firebase-URL eingeben.');return null;}
+  if(!u.startsWith('https://')){showErr('URL muss mit https:// beginnen.');return null;}
+  return u.replace(/\/+$/,'');
+}
+
+async function setupNew(){
+  const u=getUrl();if(!u)return;
+  dbUrl=u;
+  // Test connection & write empty state
+  setStatus('Verbinde…');
+  try{
+    const r=await fetch(u+'/veggie.json',{
+      method:'PUT',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({participants:[],weeks:{},customVeggies:[]})
+    });
+    if(!r.ok)throw new Error('HTTP '+r.status+' – Testmodus aktiv?');
+    localStorage.setItem('vvc_fb',u);
+    st={participants:[],weeks:{},customVeggies:[]};
+    showApp();
+  }catch(e){
+    showErr('Verbindung fehlgeschlagen: '+e.message+'\n→ Ist der Testmodus aktiviert?');
+    setStatus('');
+  }
+}
+
+async function setupJoin(){
+  const u=getUrl();if(!u)return;
+  dbUrl=u;
+  setStatus('Verbinde…');
+  try{
+    const r=await fetch(u+'/veggie.json');
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const data=await r.json();
+    st={participants:(data&&data.participants)||[],weeks:(data&&data.weeks)||{},customVeggies:(data&&data.customVeggies)||[]};
+    localStorage.setItem('vvc_fb',u);
+    showApp();
+  }catch(e){
+    showErr('Verbindung fehlgeschlagen: '+e.message);
+    setStatus('');
+  }
+}
+
+function showErr(m){const el=document.getElementById('serr');el.textContent=m;el.style.display='block';}
+
+function resetSetup(){
+  localStorage.removeItem('vvc_fb');
+  document.getElementById('A').style.display='none';
+  document.getElementById('P').style.display='none';
+  document.getElementById('S').style.display='block';
+}
+
+function showApp(){
+  document.getElementById('S').style.display='none';
+  document.getElementById('A').style.display='block';
+  document.getElementById('P').style.display='none';
+  document.getElementById('fb-display').textContent=dbUrl;
+  render();
+}
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let st={participants:[],weeks:{},customVeggies:[]};
+const curW=wKey();
+let viewW=curW;
+let openP=null;
+
+// ── Aktionen ──────────────────────────────────────────────────────────────────
+function register(){
+  const name=document.getElementById('nname').value.trim();
+  if(!name)return;
+  if(st.participants.some(p=>p.name.toLowerCase()===name.toLowerCase())){alert('Name bereits vergeben.');return;}
+  const id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  st.participants.push({id,name});
+  document.getElementById('nname').value='';
+  document.getElementById('register-modal').style.display='none';
+  scheduleSave();render();
+}
+
+function removePart(pid,pname){
+  showConfirm(`„${pname}" wirklich entfernen?`,()=>{
+    st.participants=st.participants.filter(x=>x.id!==pid);
+    scheduleSave();render();
+  });
+}
+
+function getV(pid,wk){return(st.weeks[wk]||{})[pid]||[];}
+function setV(pid,veggies){
+  if(!st.weeks[curW])st.weeks[curW]={};
+  st.weeks[curW][pid]=veggies;
+  scheduleSave();renderPsum(pid);renderLB();renderVGrid(pid);
+}
+function addV(pid,name){const c=getV(pid,curW);if(!c.includes(name))setV(pid,[...c,name]);}
+function remV(pid,name){setV(pid,getV(pid,curW).filter(v=>v!==name));}
+
+function addCustom(pid){
+  const inp=document.getElementById('ci');
+  const t=inp.value.trim();if(!t)return;
+  const existing=allCat().find(v=>v.n.toLowerCase()===t.toLowerCase());
+  if(existing){addV(pid,existing.n);}
+  else{
+    if(!st.customVeggies)st.customVeggies=[];
+    st.customVeggies.push({name:t,color:rndC(),emoji:'🥬',custom:true});
+    addV(pid,t);
+  }
+  inp.value='';inp.focus();
+}
+
+function removeCustomVeggie(name){
+  showConfirm(`„${name}" aus der Datenbank entfernen? Alle Einträge dieser Sorte bei Spielern bleiben erhalten.`,()=>{
+    st.customVeggies=(st.customVeggies||[]).filter(v=>v.name!==name);
+    scheduleSave();render();renderCatalogModal();
+  });
+}
+
+function showCatalogModal(){
+  document.getElementById('catalog-modal').style.display='flex';
+  renderCatalogModal();
+}
+
+function renderCatalogModal(){
+  // Base catalog (read-only)
+  document.getElementById('cat-base').innerHTML=BASE.map(v=>
+    `<span class="chip" style="background:${v.c}22;border-color:${v.c};cursor:default">${v.e} ${x(v.n)}</span>`
+  ).join('');
+  // Custom (deletable)
+  const cv=st.customVeggies||[];
+  document.getElementById('cat-custom-count').textContent=cv.length?`(${cv.length})`:'';
+  document.getElementById('cat-custom').innerHTML=cv.length
+    ? cv.map(v=>`<span class="chip" onclick="removeCustomVeggie('${x(v.name)}')" style="background:${v.color}22;border-color:${v.color}" title="Klicken zum Entfernen">🥬 ${x(v.name)} ×</span>`).join('')
+    : '<div style="color:var(--muted);font-size:12px;padding:4px 0">Keine manuellen Einträge.</div>';
+}
+
+function chWeek(n){if(n>0&&viewW===curW)return;viewW=shiftW(viewW,n);render();}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function render(){
+  const isMain=!openP;
+  document.getElementById('A').style.display=isMain?'block':'none';
+  document.getElementById('P').style.display=isMain?'none':'block';
+  if(isMain)renderMain();else renderPlayer();
+}
+
+function renderMain(){
+  const isCur=viewW===curW;
+  document.getElementById('wlabel').textContent=wLabel(viewW);
+  document.getElementById('whint').style.color=isCur?'var(--accent)':'var(--muted)';
+  document.getElementById('whint').textContent=isCur?'● Aktuelle Woche':'Historische Ansicht';
+  document.getElementById('btn-next').style.opacity=isCur?'.3':'1';
+  document.getElementById('lhint').textContent=isCur?'· klicken zum Bearbeiten':'· klicken zum Ansehen';
+  renderLB();
+}
+
+function renderLB(){
+  const isCur=viewW===curW;
+  const sorted=[...st.participants].sort((a,b)=>getV(b.id,viewW).length-getV(a.id,viewW).length);
+  const lb=document.getElementById('LB');
+  if(!sorted.length){lb.innerHTML='<div style="color:var(--muted);font-size:13px;padding:10px 0">Noch keine Teilnehmer.</div>';return;}
+  const rnk=['🥇','🥈','🥉'];
+  lb.innerHTML=sorted.map((p,i)=>{
+    const vs=getV(p.id,viewW),cnt=vs.length,pct=Math.min(cnt/30*100,100),done=cnt>=30;
+    const bg=done?'linear-gradient(90deg,var(--dim),var(--accent))':'linear-gradient(90deg,#1e4a10,var(--dim))';
+    return`<div class="lrow">
+      <div style="width:28px;text-align:center;font-size:15px;flex-shrink:0">${i<3?rnk[i]:'#'+(i+1)}</div>
+      <div onclick="openPP('${p.id}',${!isCur})" style="width:110px;font-size:13px;color:${isCur?'var(--accent)':'var(--text)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;flex-shrink:0;text-decoration:${isCur?'underline dotted':'none'}">${x(p.name)}</div>
+      <div class="bwrap" onclick="openPP('${p.id}',${!isCur})"><div class="bfill" style="width:${pct}%;background:${bg}">${cnt>3?cnt+'/30':''}</div></div>
+      <div style="width:38px;text-align:right;font-size:12px;color:${done?'var(--accent)':'var(--muted)'};flex-shrink:0">${done?'✅':cnt+'/30'}</div>
+      ${isCur?`<button class="btn d sm" onclick="event.stopPropagation();removePart('${p.id}','${x(p.name)}')">✕</button>`:''}
+    </div>`;
+  }).join('');
+}
+
+function openPP(pid,ro){openP={id:pid,ro};render();}
+function closePage(){openP=null;render();}
+
+function renderPlayer(){
+  const{id:pid,ro}=openP;
+  const p=st.participants.find(q=>q.id===pid);
+  if(!p){closePage();return;}
+  document.getElementById('ptitle').textContent=(ro?'👁 ':'✏️ ')+p.name;
+  document.getElementById('psub').textContent=ro?'Ansicht':'Gemüse eintragen';
+  renderPsum(pid);
+  const pe=document.getElementById('pedit');
+  if(ro){pe.innerHTML='';return;}
+  pe.innerHTML=`
+    <div class="card"><div class="lbl">Aus der Liste</div>
+      <input id="vs" type="text" placeholder="Suchen…" oninput="renderVGrid('${pid}')">
+      <div class="vgrid" id="vg"></div></div>
+    <div class="card"><div class="lbl">Eigene Sorte</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Nicht in der Liste? Einfach eingeben – wird für alle gespeichert.</div>
+      <div class="row">
+        <input id="ci" type="text" placeholder="z.B. Bärlauch, Wakame…" onkeydown="if(event.key==='Enter')addCustom('${pid}')">
+        <button class="btn p" onclick="addCustom('${pid}')" style="white-space:nowrap">+ Hinzufügen</button>
+      </div></div>`;
+  renderVGrid(pid);
+}
+
+function renderPsum(pid){
+  const ro=(openP||{ro:true}).ro;
+  const sel=getV(pid,viewW);
+  const SH=300,uh=SH/30;
+  document.getElementById('psum').innerHTML=`
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0">
+      <div style="font-size:11px;color:var(--muted)">Fortschritt</div>
+      <div class="sbar" style="height:${SH}px">
+        ${sel.map(n=>{const v=findV(n);return`<div class="sseg" title="${x(n)}" style="height:${Math.max(uh,2)}px;background:${v.c}"></div>`;}).join('')}
+        <div class="tline"></div>
+      </div>
+      <div style="font-size:20px;font-weight:700;color:${sel.length>=30?'var(--accent)':'var(--text)'}">
+        ${sel.length}<span style="font-size:12px;color:var(--muted)">/30</span></div>
+    </div>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Eingetragen${ro?'':' · antippen zum Entfernen'}:</div>
+      ${!sel.length?'<div style="color:var(--muted);font-size:13px">Noch keine Einträge.</div>':''}
+      <div>${sel.map(n=>{const v=findV(n);return`<span class="chip" onclick="${ro?'':`remV('${pid}','${x(n)}')`}" style="background:${v.c}28;border-color:${v.c};cursor:${ro?'default':'pointer'}">${v.e} ${x(n)}${ro?'':' ×'}</span>`;}).join('')}</div>
+    </div>`;
+}
+
+function renderVGrid(pid){
+  const q=(document.getElementById('vs')?.value||'').toLowerCase();
+  const sel=getV(pid,viewW);
+  const avail=allCat().filter(v=>!sel.includes(v.n)&&v.n.toLowerCase().includes(q));
+  const g=document.getElementById('vg');if(!g)return;
+  g.innerHTML=avail.map(v=>`<span class="chip" onclick="addV('${pid}','${x(v.n)}')" style="background:${v.c}22;border-color:${v.c}">${v.e} ${x(v.n)}</span>`).join('');
+}
+
+function showModal(id){document.getElementById(id).style.display='flex';}
+function showConfirm(msg,cb){
+  document.getElementById('cmsg').textContent=msg;
+  document.getElementById('confirm').style.display='flex';
+  document.getElementById('cok').onclick=()=>{document.getElementById('confirm').style.display='none';cb();};
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+const saved=localStorage.getItem('vvc_fb');
+if(saved){dbUrl=saved;showApp();doLoad();}
+else document.getElementById('S').style.display='block';
+</script>
+</body>
+</html>
