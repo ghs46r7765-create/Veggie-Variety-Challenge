@@ -101,7 +101,7 @@
   <div class="header">
     <div>
       <h1>🥦 Veggie Variety Challenge</h1>
-      <div class="sub">30 Sorten · 7 Tage · Alles für die Gesundheit</div>
+      <div class="sub">30 Sorten · 7 Tage · Alle gegen alle</div>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
       <span id="status"></span>
@@ -125,9 +125,10 @@
         🔄 Aktualisieren
       </button>
     </div>
-    <div style="margin-top:20px;font-size:11px;color:var(--muted);text-align:center">
+    <div style="margin-top:20px;font-size:11px;color:var(--muted);text-align:center;line-height:2">
       Firebase: <code id="fb-display" style="font-size:10px"></code> ·
-      <a href="#" onclick="resetSetup()" style="color:var(--muted)">Zurücksetzen</a>
+      <a href="#" onclick="resetSetup()" style="color:var(--muted)">Zurücksetzen</a> ·
+      <a href="#" onclick="downloadBackup()" style="color:var(--muted)">💾 Backup</a>
     </div>
   </div>
 </div>
@@ -221,15 +222,17 @@ function shiftW(key,n){const[year,w]=key.split('-W');const jan4=new Date(parseIn
 // Alle Daten unter: {dbUrl}/veggie.json
 let dbUrl=''; // z.B. https://xxx-default-rtdb.firebaseio.com
 
-function fbUrl(){return dbUrl.replace(/\/+$/,'')+'/veggie.json';}
+// Firebase REST paths – root level (preserves existing data structure)
+// fb('') -> /.json  fb('participants') -> /participants.json  fb('weeks/KW/pid') -> /weeks/KW/pid.json
+const fb=path=>dbUrl.replace(/\/+$/,'')+'/'+(path||'')+'.json';
 
+// Lädt den kompletten Stand (nur beim Start / manuell)
 async function doLoad(showMsg=false){
   setStatus('…');
   try{
-    const r=await fetch(fbUrl());
+    const r=await fetch(fb(''));
     if(!r.ok) throw new Error('HTTP '+r.status);
     const data=await r.json();
-    // Firebase gibt null zurück wenn leer
     st={
       participants:(data&&data.participants)||[],
       weeks:(data&&data.weeks)||{},
@@ -244,27 +247,39 @@ async function doLoad(showMsg=false){
   }
 }
 
-let saveTimer=null;
-function scheduleSave(){
-  clearTimeout(saveTimer);
-  saveTimer=setTimeout(doSave,700);
+// Granularer Schreibhelfer – schreibt nur einen einzelnen Pfad
+async function fbPut(path, value){
+  const r=await fetch(fb(path),{
+    method:'PUT',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(value)
+  });
+  if(!r.ok) throw new Error('HTTP '+r.status);
 }
 
-async function doSave(){
+// Jeder Aufruf bekommt seinen eigenen Pfad – kein globales Debounce mehr nötig
+async function saveVeggies(pid,veggies){
   setStatus('speichert…');
   try{
-    const r=await fetch(fbUrl(),{
-      method:'PUT',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify(st)
-    });
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    setStatus('✓');
-    setTimeout(()=>setStatus(''),2500);
-  }catch(e){
-    setStatus('⚠ Fehler');
-    console.error('save',e);
-  }
+    await fbPut('weeks/'+curW+'/'+pid, veggies);
+    setStatus('✓'); setTimeout(()=>setStatus(''),2000);
+  }catch(e){setStatus('⚠ Fehler');console.error(e);}
+}
+
+async function saveParticipants(){
+  setStatus('speichert…');
+  try{
+    await fbPut('participants', st.participants);
+    setStatus('✓'); setTimeout(()=>setStatus(''),2000);
+  }catch(e){setStatus('⚠ Fehler');console.error(e);}
+}
+
+async function saveCustomVeggies(){
+  setStatus('speichert…');
+  try{
+    await fbPut('customVeggies', st.customVeggies||[]);
+    setStatus('✓'); setTimeout(()=>setStatus(''),2000);
+  }catch(e){setStatus('⚠ Fehler');console.error(e);}
 }
 
 function setStatus(m){document.getElementById('status').textContent=m;}
@@ -283,7 +298,7 @@ async function setupNew(){
   // Test connection & write empty state
   setStatus('Verbinde…');
   try{
-    const r=await fetch(u+'/veggie.json',{
+    const r=await fetch(u+'/.json',{
       method:'PUT',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({participants:[],weeks:{},customVeggies:[]})
@@ -303,7 +318,7 @@ async function setupJoin(){
   dbUrl=u;
   setStatus('Verbinde…');
   try{
-    const r=await fetch(u+'/veggie.json');
+    const r=await fetch(u+'/.json');
     if(!r.ok)throw new Error('HTTP '+r.status);
     const data=await r.json();
     st={participants:(data&&data.participants)||[],weeks:(data&&data.weeks)||{},customVeggies:(data&&data.customVeggies)||[]};
@@ -347,13 +362,13 @@ function register(){
   st.participants.push({id,name});
   document.getElementById('nname').value='';
   document.getElementById('register-modal').style.display='none';
-  scheduleSave();render();
+  saveParticipants();render();
 }
 
 function removePart(pid,pname){
   showConfirm(`„${pname}" wirklich entfernen?`,()=>{
     st.participants=st.participants.filter(x=>x.id!==pid);
-    scheduleSave();render();
+    saveParticipants();render();
   });
 }
 
@@ -361,7 +376,7 @@ function getV(pid,wk){return(st.weeks[wk]||{})[pid]||[];}
 function setV(pid,veggies){
   if(!st.weeks[curW])st.weeks[curW]={};
   st.weeks[curW][pid]=veggies;
-  scheduleSave();renderPsum(pid);renderLB();renderVGrid(pid);
+  saveVeggies(pid,veggies);renderPsum(pid);renderLB();renderVGrid(pid);
 }
 function addV(pid,name){const c=getV(pid,curW);if(!c.includes(name))setV(pid,[...c,name]);}
 function remV(pid,name){setV(pid,getV(pid,curW).filter(v=>v!==name));}
@@ -374,6 +389,7 @@ function addCustom(pid){
   else{
     if(!st.customVeggies)st.customVeggies=[];
     st.customVeggies.push({name:t,color:rndC(),emoji:'🥬',custom:true});
+    saveCustomVeggies();
     addV(pid,t);
   }
   inp.value='';inp.focus();
@@ -382,7 +398,7 @@ function addCustom(pid){
 function removeCustomVeggie(name){
   showConfirm(`„${name}" aus der Datenbank entfernen? Alle Einträge dieser Sorte bei Spielern bleiben erhalten.`,()=>{
     st.customVeggies=(st.customVeggies||[]).filter(v=>v.name!==name);
-    scheduleSave();render();renderCatalogModal();
+    saveCustomVeggies();render();renderCatalogModal();
   });
 }
 
@@ -402,6 +418,16 @@ function renderCatalogModal(){
   document.getElementById('cat-custom').innerHTML=cv.length
     ? cv.map(v=>`<span class="chip" onclick="removeCustomVeggie('${x(v.name)}')" style="background:${v.color}22;border-color:${v.color}" title="Klicken zum Entfernen">🥬 ${x(v.name)} ×</span>`).join('')
     : '<div style="color:var(--muted);font-size:12px;padding:4px 0">Keine manuellen Einträge.</div>';
+}
+
+function downloadBackup(){
+  const ts=new Date().toISOString().slice(0,10);
+  const blob=new Blob([JSON.stringify(st,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='veggie-challenge-backup-'+ts+'.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
 }
 
 function chWeek(n){if(n>0&&viewW===curW)return;viewW=shiftW(viewW,n);render();}
