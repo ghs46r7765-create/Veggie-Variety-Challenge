@@ -226,6 +226,14 @@ let dbUrl=''; // z.B. https://xxx-default-rtdb.firebaseio.com
 // fb('') -> /veggie.json  fb('participants') -> /veggie/participants.json
 const fb=path=>dbUrl.replace(/\/+$/,'')+(path?'/veggie/'+path:'/veggie')+'.json';
 
+// Firebase gibt Arrays manchmal als Objekte {0:{...},1:{...}} zurück – normalisieren
+function toArr(val){
+  if(!val) return [];
+  if(Array.isArray(val)) return val.filter(v=>v!=null);
+  if(typeof val==='object') return Object.values(val).filter(v=>v!=null);
+  return [];
+}
+
 // Lädt den kompletten Stand (nur beim Start / manuell)
 async function doLoad(showMsg=false){
   setStatus('…');
@@ -233,17 +241,27 @@ async function doLoad(showMsg=false){
     const r=await fetch(fb(''));
     if(!r.ok) throw new Error('HTTP '+r.status);
     const data=await r.json();
+    // Normalisiere weeks: {KW: {pid: Array}}
+    const rawWeeks=(data&&data.weeks)||{};
+    const weeks={};
+    for(const wk of Object.keys(rawWeeks)){
+      weeks[wk]={};
+      const wkData=rawWeeks[wk]||{};
+      for(const pid of Object.keys(wkData)){
+        weeks[wk][pid]=toArr(wkData[pid]);
+      }
+    }
     st={
-      participants:(data&&data.participants)||[],
-      weeks:(data&&data.weeks)||{},
-      customVeggies:(data&&data.customVeggies)||[]
+      participants:toArr(data&&data.participants),
+      weeks,
+      customVeggies:toArr(data&&data.customVeggies)
     };
     setStatus(showMsg?'✓':'');
     if(showMsg)setTimeout(()=>setStatus(''),2000);
     render();
   }catch(e){
     setStatus('⚠ Ladefehler');
-    console.error('load',e);
+    console.error('load error:',e);
   }
 }
 
@@ -321,7 +339,15 @@ async function setupJoin(){
     const r=await fetch(u+'/veggie.json');
     if(!r.ok)throw new Error('HTTP '+r.status);
     const data=await r.json();
-    st={participants:(data&&data.participants)||[],weeks:(data&&data.weeks)||{},customVeggies:(data&&data.customVeggies)||[]};
+    const rawW=(data&&data.weeks)||{};
+    const wks={};
+    for(const wk of Object.keys(rawW)){
+      wks[wk]={};
+      for(const pid of Object.keys(rawW[wk]||{})){
+        wks[wk][pid]=toArr(rawW[wk][pid]);
+      }
+    }
+    st={participants:toArr(data&&data.participants),weeks:wks,customVeggies:toArr(data&&data.customVeggies)};
     localStorage.setItem('vvc_fb',u);
     showApp();
   }catch(e){
