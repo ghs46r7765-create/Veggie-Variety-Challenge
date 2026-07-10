@@ -35,63 +35,33 @@
   .tline{position:absolute;top:0;left:0;right:0;border-top:2px dashed var(--accent);z-index:2}
   #status{font-size:11px;color:var(--muted);margin-right:4px}
   li{line-height:2.1}
-  .setup{max-width:520px;margin:40px auto;padding:0 20px}
-  .setup h2{color:var(--accent);margin-bottom:8px}
   code{background:var(--alt);padding:2px 6px;border-radius:4px;color:var(--accent);font-size:12px;word-break:break-all}
   a{color:var(--accent)}
-  .step{display:flex;gap:12px;margin-bottom:16px}
-  .stepn{background:var(--accent);color:var(--bg);border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;margin-top:2px}
+  .center{max-width:400px;margin:60px auto;padding:0 20px}
+  .center h2{color:var(--accent);margin-bottom:6px}
+  .err{color:var(--danger);font-size:12px;margin-top:8px;display:none}
+  .fld{margin-bottom:12px}
+  .fld label{display:block;font-size:11px;color:var(--muted);margin-bottom:5px}
 </style>
 </head>
 <body>
 
-<!-- SETUP -->
-<div id="S" style="display:none">
-  <div class="setup">
+<!-- LOGIN SCREEN -->
+<div id="LOGIN" style="display:none">
+  <div class="center">
     <h2>🥦 Veggie Variety Challenge</h2>
-    <p style="color:var(--muted);font-size:13px;line-height:1.7;margin:8px 0 20px">
-      Für Multi-User-Sync wird eine kostenlose Firebase-Datenbank benötigt.<br>Einmalige Einrichtung (~5 Min).
-    </p>
-
+    <p style="font-size:12px;color:var(--muted);margin-bottom:20px;line-height:1.6">Bitte anmelden um fortzufahren.</p>
     <div class="card" style="margin-top:0">
-      <div class="lbl" style="margin-bottom:14px">Firebase einrichten</div>
-
-      <div class="step">
-        <div class="stepn">1</div>
-        <div style="font-size:13px;color:var(--text);line-height:1.7">
-          <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> öffnen →
-          <strong>„Projekt erstellen"</strong> → Namen eingeben → Google Analytics deaktivieren → Erstellen
-        </div>
+      <div class="fld">
+        <label>E-Mail</label>
+        <input id="l-email" type="email" placeholder="name@beispiel.de" onkeydown="if(event.key==='Enter')doLogin()">
       </div>
-
-      <div class="step">
-        <div class="stepn">2</div>
-        <div style="font-size:13px;color:var(--text);line-height:1.7">
-          Im linken Menü: <strong>Erstellen → Realtime Database</strong> →
-          <strong>„Datenbank erstellen"</strong> → Region wählen →
-          <strong>„Im Testmodus starten"</strong> (30 Tage offen, reicht für den Test)
-        </div>
+      <div class="fld">
+        <label>Passwort</label>
+        <input id="l-pass" type="password" placeholder="Passwort" onkeydown="if(event.key==='Enter')doLogin()">
       </div>
-
-      <div class="step">
-        <div class="stepn">3</div>
-        <div style="font-size:13px;color:var(--text);line-height:1.7">
-          Die angezeigte Datenbank-URL kopieren. Sie sieht so aus:<br>
-          <code>https://PROJEKTNAME-default-rtdb.firebaseio.com</code>
-        </div>
-      </div>
-
-      <div style="margin-top:8px">
-        <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px">Firebase Datenbank-URL:</label>
-        <input id="fburl" type="text" placeholder="https://mein-projekt-default-rtdb.firebaseio.com">
-        <div style="font-size:11px;color:var(--muted);margin-top:6px">Wird lokal im Browser gespeichert – nicht geteilt.</div>
-      </div>
-
-      <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn p" onclick="setupNew()">Neue Challenge starten</button>
-        <button class="btn" onclick="setupJoin()">Bestehender Challenge beitreten</button>
-      </div>
-      <p id="serr" style="color:var(--danger);font-size:12px;margin-top:10px;display:none"></p>
+      <button class="btn p" onclick="doLogin()" style="width:100%">Anmelden</button>
+      <p id="l-err" class="err"></p>
     </div>
   </div>
 </div>
@@ -101,12 +71,13 @@
   <div class="header">
     <div>
       <h1>🥦 Veggie Variety Challenge</h1>
-      <div class="sub">30 Sorten · 7 Tage · Alle gegen alle</div>
+      <div class="sub">30 Sorten · 7 Tage · Alle gegen alle · <span id="user-display" style="color:var(--accent)"></span></div>
     </div>
-    <div style="display:flex;gap:8px;align-items:center">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <span id="status"></span>
       <button class="btn" onclick="showModal('register-modal')">👤 Teilnehmer</button>
       <button class="btn" onclick="showModal('catalog-modal');renderCatalogModal()">🥦 Datenbank</button>
+      <button class="btn sm" onclick="doLogout()" title="Abmelden">↩</button>
     </div>
   </div>
   <div class="wrap">
@@ -126,8 +97,6 @@
       </button>
     </div>
     <div style="margin-top:20px;font-size:11px;color:var(--muted);text-align:center;line-height:2">
-      Firebase: <code id="fb-display" style="font-size:10px"></code> ·
-      <a href="#" onclick="resetSetup()" style="color:var(--muted)">Zurücksetzen</a> ·
       <a href="#" onclick="downloadBackup()" style="color:var(--muted)">💾 Backup</a>
     </div>
   </div>
@@ -145,6 +114,18 @@
   </div>
 </div>
 
+<!-- REGISTER MODAL -->
+<div class="mbg" id="register-modal" style="display:none" onclick="this.style.display='none'">
+  <div class="modal" style="max-width:400px" onclick="event.stopPropagation()">
+    <h2 style="color:var(--accent);margin-bottom:16px;font-size:17px">👤 Neuen Teilnehmer anmelden</h2>
+    <div class="row">
+      <input id="nname" type="text" placeholder="Name…" onkeydown="if(event.key==='Enter')register()">
+      <button class="btn p" onclick="register()" style="white-space:nowrap">Anmelden</button>
+    </div>
+    <button class="btn" onclick="document.getElementById('register-modal').style.display='none'" style="margin-top:16px">Schließen</button>
+  </div>
+</div>
+
 <!-- CATALOG MODAL -->
 <div class="mbg" id="catalog-modal" style="display:none" onclick="this.style.display='none'">
   <div class="modal" onclick="event.stopPropagation()" style="max-width:560px">
@@ -158,18 +139,6 @@
   </div>
 </div>
 
-<!-- REGISTER MODAL -->
-<div class="mbg" id="register-modal" style="display:none" onclick="this.style.display='none'">
-  <div class="modal" style="max-width:400px" onclick="event.stopPropagation()">
-    <h2 style="color:var(--accent);margin-bottom:16px;font-size:17px">👤 Neuen Teilnehmer anmelden</h2>
-    <div class="row">
-      <input id="nname" type="text" placeholder="Name…" onkeydown="if(event.key==='Enter')register()">
-      <button class="btn p" onclick="register()" style="white-space:nowrap">Anmelden</button>
-    </div>
-    <button class="btn" onclick="document.getElementById('register-modal').style.display='none'" style="margin-top:16px">Schließen</button>
-  </div>
-</div>
-
 <!-- CONFIRM -->
 <div class="mbg" id="confirm" style="display:none">
   <div class="modal" style="max-width:360px">
@@ -180,6 +149,110 @@
     </div>
   </div>
 </div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import{getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import{getDatabase,ref,get,set,child}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
+// ── Firebase Config ───────────────────────────────────────────────────────────
+// Diese Werte aus der Firebase Console kopieren:
+// Projekteinstellungen → Deine Apps → Web-App → Konfiguration
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyD4DMJ03xQ_nMlEXJN_PmnZEYb-S-TWExo",
+  authDomain: "veggievarietychallenge-5e121.firebaseapp.com",
+  databaseURL: "https://veggievarietychallenge-5e121-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "veggievarietychallenge-5e121",
+  storageBucket: "veggievarietychallenge-5e121.firebasestorage.app",
+  messagingSenderId: "233079592329",
+  appId: "1:233079592329:web:ad5a9ea492104f3114bd58"
+};
+
+const firebaseApp = initializeApp(FIREBASE_CONFIG);
+const auth        = getAuth(firebaseApp);
+const db          = getDatabase(firebaseApp);
+
+// ── Auth ──────────────────────────────────────────────────────────────────────
+window.doLogin = async function(){
+  const email = document.getElementById('l-email').value.trim();
+  const pass  = document.getElementById('l-pass').value;
+  const err   = document.getElementById('l-err');
+  err.style.display='none';
+  try{
+    await signInWithEmailAndPassword(auth, email, pass);
+  }catch(e){
+    err.textContent = e.code==='auth/invalid-credential'
+      ? 'E-Mail oder Passwort falsch.'
+      : 'Fehler: '+e.message;
+    err.style.display='block';
+  }
+};
+
+window.doLogout = async function(){
+  await signOut(auth);
+};
+
+onAuthStateChanged(auth, user => {
+  if(user){
+    document.getElementById('LOGIN').style.display='none';
+    document.getElementById('user-display').textContent = user.email.split('@')[0];
+    showApp();
+    doLoad();
+  } else {
+    document.getElementById('A').style.display='none';
+    document.getElementById('P').style.display='none';
+    document.getElementById('LOGIN').style.display='block';
+  }
+});
+
+// ── Firebase Realtime Database ────────────────────────────────────────────────
+// Alle Daten unter /veggie/ (bestehende Struktur bleibt erhalten)
+
+function toArr(val){
+  if(!val) return [];
+  if(Array.isArray(val)) return val.filter(v=>v!=null);
+  if(typeof val==='object') return Object.values(val).filter(v=>v!=null);
+  return [];
+}
+
+window.doLoad = async function(showMsg=false){
+  setStatus('…');
+  try{
+    const snap = await get(ref(db,'veggie'));
+    const data = snap.val()||{};
+    const rawW = data.weeks||{};
+    const weeks={};
+    for(const wk of Object.keys(rawW)){
+      weeks[wk]={};
+      for(const pid of Object.keys(rawW[wk]||{})){
+        weeks[wk][pid]=toArr(rawW[wk][pid]);
+      }
+    }
+    window.st={
+      participants: toArr(data.participants),
+      weeks,
+      customVeggies: toArr(data.customVeggies)
+    };
+    setStatus(showMsg?'✓':'');
+    if(showMsg) setTimeout(()=>setStatus(''),2000);
+    render();
+  }catch(e){
+    setStatus('⚠ Ladefehler');
+    console.error('load',e);
+  }
+};
+
+// Granulare Schreiboperationen – jeder schreibt nur seinen eigenen Pfad
+window.fbSet = async function(path, value){
+  await set(ref(db, 'veggie/'+path), value);
+};
+
+window.saveVeggies     = async(pid,v)=>{ setStatus('speichert…'); try{ await fbSet('weeks/'+curW+'/'+pid,v); setStatus('✓'); setTimeout(()=>setStatus(''),2000); }catch(e){setStatus('⚠');console.error(e);} };
+window.saveParticipants= async()=>     { setStatus('speichert…'); try{ await fbSet('participants',window.st.participants); setStatus('✓'); setTimeout(()=>setStatus(''),2000); }catch(e){setStatus('⚠');console.error(e);} };
+window.saveCustomVeggies=async()=>     { setStatus('speichert…'); try{ await fbSet('customVeggies',window.st.customVeggies||[]); setStatus('✓'); setTimeout(()=>setStatus(''),2000); }catch(e){setStatus('⚠');console.error(e);} };
+
+</script>
 
 <script>
 // ── Katalog ──────────────────────────────────────────────────────────────────
@@ -207,185 +280,37 @@ const BASE=[
 ];
 const COLS=["#e74c3c","#e67e22","#f1c40f","#2ecc71","#1abc9c","#3498db","#9b59b6","#e91e63","#00bcd4","#8bc34a"];
 const rndC=()=>COLS[Math.floor(Math.random()*COLS.length)];
-const allCat=()=>[...BASE,...(st.customVeggies||[]).map(v=>({n:v.name,c:v.color,e:v.emoji||'🥬'}))];
+const allCat=()=>[...BASE,...(window.st?.customVeggies||[]).map(v=>({n:v.name,c:v.color,e:v.emoji||'🥬'}))];
 const findV=name=>{const v=allCat().find(x=>x.n===name);return v||{c:"#888",e:"🥬"};};
 function x(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
-// ── Wochen ───────────────────────────────────────────────────────────────────
+// ── Wochen ────────────────────────────────────────────────────────────────────
 function isoW(d){const dt=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));dt.setUTCDate(dt.getUTCDate()+4-(dt.getUTCDay()||7));return Math.ceil(((dt-new Date(Date.UTC(dt.getUTCFullYear(),0,1)))/864e5+1)/7);}
 function wKey(date=new Date()){const d=new Date(date);d.setHours(0,0,0,0);const day=d.getDay();d.setDate(d.getDate()+(day===0?-6:1-day));return`${d.getFullYear()}-W${String(isoW(d)).padStart(2,'0')}`;}
 function wLabel(key){const[year,w]=key.split('-W'),week=parseInt(w);const jan4=new Date(parseInt(year),0,4),j=jan4.getDay()||7;const mon=new Date(jan4);mon.setDate(jan4.getDate()-j+1+(week-1)*7);const sun=new Date(mon);sun.setDate(mon.getDate()+6);const f=d=>d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit'});return`KW ${week} · ${f(mon)}–${f(sun)} ${year}`;}
 function shiftW(key,n){const[year,w]=key.split('-W');const jan4=new Date(parseInt(year),0,4),j=jan4.getDay()||7;const mon=new Date(jan4);mon.setDate(jan4.getDate()-j+1+(parseInt(w)-1+n)*7);return wKey(mon);}
 
-// ── Firebase REST API ─────────────────────────────────────────────────────────
-// Firebase Realtime Database hat volle CORS-Unterstützung per REST – kein SDK nötig.
-// Alle Daten unter: {dbUrl}/veggie.json
-let dbUrl=''; // z.B. https://xxx-default-rtdb.firebaseio.com
-
-// Firebase REST paths – data lives under /veggie/ node
-// fb('') -> /veggie.json  fb('participants') -> /veggie/participants.json
-const fb=path=>dbUrl.replace(/\/+$/,'')+(path?'/veggie/'+path:'/veggie')+'.json';
-
-// Firebase gibt Arrays manchmal als Objekte {0:{...},1:{...}} zurück – normalisieren
-function toArr(val){
-  if(!val) return [];
-  if(Array.isArray(val)) return val.filter(v=>v!=null);
-  if(typeof val==='object') return Object.values(val).filter(v=>v!=null);
-  return [];
-}
-
-// Lädt den kompletten Stand (nur beim Start / manuell)
-async function doLoad(showMsg=false){
-  setStatus('…');
-  try{
-    const r=await fetch(fb(''));
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    const data=await r.json();
-    // Normalisiere weeks: {KW: {pid: Array}}
-    const rawWeeks=(data&&data.weeks)||{};
-    const weeks={};
-    for(const wk of Object.keys(rawWeeks)){
-      weeks[wk]={};
-      const wkData=rawWeeks[wk]||{};
-      for(const pid of Object.keys(wkData)){
-        weeks[wk][pid]=toArr(wkData[pid]);
-      }
-    }
-    st={
-      participants:toArr(data&&data.participants),
-      weeks,
-      customVeggies:toArr(data&&data.customVeggies)
-    };
-    setStatus(showMsg?'✓':'');
-    if(showMsg)setTimeout(()=>setStatus(''),2000);
-    render();
-  }catch(e){
-    setStatus('⚠ Ladefehler');
-    console.error('load error:',e);
-  }
-}
-
-// Granularer Schreibhelfer – schreibt nur einen einzelnen Pfad
-async function fbPut(path, value){
-  const r=await fetch(fb(path),{
-    method:'PUT',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify(value)
-  });
-  if(!r.ok) throw new Error('HTTP '+r.status);
-}
-
-// Jeder Aufruf bekommt seinen eigenen Pfad – kein globales Debounce mehr nötig
-async function saveVeggies(pid,veggies){
-  setStatus('speichert…');
-  try{
-    await fbPut('weeks/'+curW+'/'+pid, veggies);
-    setStatus('✓'); setTimeout(()=>setStatus(''),2000);
-  }catch(e){setStatus('⚠ Fehler');console.error(e);}
-}
-
-async function saveParticipants(){
-  setStatus('speichert…');
-  try{
-    await fbPut('participants', st.participants);
-    setStatus('✓'); setTimeout(()=>setStatus(''),2000);
-  }catch(e){setStatus('⚠ Fehler');console.error(e);}
-}
-
-async function saveCustomVeggies(){
-  setStatus('speichert…');
-  try{
-    await fbPut('customVeggies', st.customVeggies||[]);
-    setStatus('✓'); setTimeout(()=>setStatus(''),2000);
-  }catch(e){setStatus('⚠ Fehler');console.error(e);}
-}
-
-function setStatus(m){document.getElementById('status').textContent=m;}
-
-// ── Setup ─────────────────────────────────────────────────────────────────────
-function getUrl(){
-  let u=document.getElementById('fburl').value.trim();
-  if(!u){showErr('Bitte Firebase-URL eingeben.');return null;}
-  if(!u.startsWith('https://')){showErr('URL muss mit https:// beginnen.');return null;}
-  return u.replace(/\/+$/,'');
-}
-
-async function setupNew(){
-  const u=getUrl();if(!u)return;
-  dbUrl=u;
-  // Test connection & write empty state
-  setStatus('Verbinde…');
-  try{
-    const r=await fetch(u+'/veggie.json',{
-      method:'PUT',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({participants:[],weeks:{},customVeggies:[]})
-    });
-    if(!r.ok)throw new Error('HTTP '+r.status+' – Testmodus aktiv?');
-    localStorage.setItem('vvc_fb',u);
-    st={participants:[],weeks:{},customVeggies:[]};
-    showApp();
-  }catch(e){
-    showErr('Verbindung fehlgeschlagen: '+e.message+'\n→ Ist der Testmodus aktiviert?');
-    setStatus('');
-  }
-}
-
-async function setupJoin(){
-  const u=getUrl();if(!u)return;
-  dbUrl=u;
-  setStatus('Verbinde…');
-  try{
-    const r=await fetch(u+'/veggie.json');
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    const data=await r.json();
-    const rawW=(data&&data.weeks)||{};
-    const wks={};
-    for(const wk of Object.keys(rawW)){
-      wks[wk]={};
-      for(const pid of Object.keys(rawW[wk]||{})){
-        wks[wk][pid]=toArr(rawW[wk][pid]);
-      }
-    }
-    st={participants:toArr(data&&data.participants),weeks:wks,customVeggies:toArr(data&&data.customVeggies)};
-    localStorage.setItem('vvc_fb',u);
-    showApp();
-  }catch(e){
-    showErr('Verbindung fehlgeschlagen: '+e.message);
-    setStatus('');
-  }
-}
-
-function showErr(m){const el=document.getElementById('serr');el.textContent=m;el.style.display='block';}
-
-function resetSetup(){
-  localStorage.removeItem('vvc_fb');
-  document.getElementById('A').style.display='none';
-  document.getElementById('P').style.display='none';
-  document.getElementById('S').style.display='block';
-}
-
-function showApp(){
-  document.getElementById('S').style.display='none';
-  document.getElementById('A').style.display='block';
-  document.getElementById('P').style.display='none';
-  document.getElementById('fb-display').textContent=dbUrl;
-  render();
-}
-
 // ── State ─────────────────────────────────────────────────────────────────────
-let st={participants:[],weeks:{},customVeggies:[]};
+window.st={participants:[],weeks:{},customVeggies:[]};
 const curW=wKey();
 let viewW=curW;
 let openP=null;
+
+function setStatus(m){document.getElementById('status').textContent=m;}
+
+function showApp(){
+  document.getElementById('A').style.display='block';
+  document.getElementById('P').style.display='none';
+  render();
+}
 
 // ── Aktionen ──────────────────────────────────────────────────────────────────
 function register(){
   const name=document.getElementById('nname').value.trim();
   if(!name)return;
-  if(st.participants.some(p=>p.name.toLowerCase()===name.toLowerCase())){alert('Name bereits vergeben.');return;}
+  if(window.st.participants.some(p=>p.name.toLowerCase()===name.toLowerCase())){alert('Name bereits vergeben.');return;}
   const id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-  st.participants.push({id,name});
+  window.st.participants.push({id,name});
   document.getElementById('nname').value='';
   document.getElementById('register-modal').style.display='none';
   saveParticipants();render();
@@ -393,15 +318,15 @@ function register(){
 
 function removePart(pid,pname){
   showConfirm(`„${pname}" wirklich entfernen?`,()=>{
-    st.participants=st.participants.filter(x=>x.id!==pid);
+    window.st.participants=window.st.participants.filter(x=>x.id!==pid);
     saveParticipants();render();
   });
 }
 
-function getV(pid,wk){return(st.weeks[wk]||{})[pid]||[];}
+function getV(pid,wk){return(window.st.weeks[wk]||{})[pid]||[];}
 function setV(pid,veggies){
-  if(!st.weeks[curW])st.weeks[curW]={};
-  st.weeks[curW][pid]=veggies;
+  if(!window.st.weeks[curW])window.st.weeks[curW]={};
+  window.st.weeks[curW][pid]=veggies;
   saveVeggies(pid,veggies);renderPsum(pid);renderLB();renderVGrid(pid);
 }
 function addV(pid,name){const c=getV(pid,curW);if(!c.includes(name))setV(pid,[...c,name]);}
@@ -413,8 +338,8 @@ function addCustom(pid){
   const existing=allCat().find(v=>v.n.toLowerCase()===t.toLowerCase());
   if(existing){addV(pid,existing.n);}
   else{
-    if(!st.customVeggies)st.customVeggies=[];
-    st.customVeggies.push({name:t,color:rndC(),emoji:'🥬',custom:true});
+    if(!window.st.customVeggies)window.st.customVeggies=[];
+    window.st.customVeggies.push({name:t,color:rndC(),emoji:'🥬',custom:true});
     saveCustomVeggies();
     addV(pid,t);
   }
@@ -422,38 +347,19 @@ function addCustom(pid){
 }
 
 function removeCustomVeggie(name){
-  showConfirm(`„${name}" aus der Datenbank entfernen? Alle Einträge dieser Sorte bei Spielern bleiben erhalten.`,()=>{
-    st.customVeggies=(st.customVeggies||[]).filter(v=>v.name!==name);
+  showConfirm(`„${name}" aus der Datenbank entfernen?`,()=>{
+    window.st.customVeggies=(window.st.customVeggies||[]).filter(v=>v.name!==name);
     saveCustomVeggies();render();renderCatalogModal();
   });
 }
 
-function showCatalogModal(){
-  document.getElementById('catalog-modal').style.display='flex';
-  renderCatalogModal();
-}
-
-function renderCatalogModal(){
-  // Base catalog (read-only)
-  document.getElementById('cat-base').innerHTML=BASE.map(v=>
-    `<span class="chip" style="background:${v.c}22;border-color:${v.c};cursor:default">${v.e} ${x(v.n)}</span>`
-  ).join('');
-  // Custom (deletable)
-  const cv=st.customVeggies||[];
-  document.getElementById('cat-custom-count').textContent=cv.length?`(${cv.length})`:'';
-  document.getElementById('cat-custom').innerHTML=cv.length
-    ? cv.map(v=>`<span class="chip" onclick="removeCustomVeggie('${x(v.name)}')" style="background:${v.color}22;border-color:${v.color}" title="Klicken zum Entfernen">🥬 ${x(v.name)} ×</span>`).join('')
-    : '<div style="color:var(--muted);font-size:12px;padding:4px 0">Keine manuellen Einträge.</div>';
-}
-
 function downloadBackup(){
   const ts=new Date().toISOString().slice(0,10);
-  const blob=new Blob([JSON.stringify(st,null,2)],{type:'application/json'});
+  const blob=new Blob([JSON.stringify(window.st,null,2)],{type:'application/json'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
   a.download='veggie-challenge-backup-'+ts+'.json';
-  a.click();
-  URL.revokeObjectURL(a.href);
+  a.click();URL.revokeObjectURL(a.href);
 }
 
 function chWeek(n){if(n>0&&viewW===curW)return;viewW=shiftW(viewW,n);render();}
@@ -478,7 +384,7 @@ function renderMain(){
 
 function renderLB(){
   const isCur=viewW===curW;
-  const sorted=[...st.participants].sort((a,b)=>getV(b.id,viewW).length-getV(a.id,viewW).length);
+  const sorted=[...window.st.participants].sort((a,b)=>getV(b.id,viewW).length-getV(a.id,viewW).length);
   const lb=document.getElementById('LB');
   if(!sorted.length){lb.innerHTML='<div style="color:var(--muted);font-size:13px;padding:10px 0">Noch keine Teilnehmer.</div>';return;}
   const rnk=['🥇','🥈','🥉'];
@@ -500,7 +406,7 @@ function closePage(){openP=null;render();}
 
 function renderPlayer(){
   const{id:pid,ro}=openP;
-  const p=st.participants.find(q=>q.id===pid);
+  const p=window.st.participants.find(q=>q.id===pid);
   if(!p){closePage();return;}
   document.getElementById('ptitle').textContent=(ro?'👁 ':'✏️ ')+p.name;
   document.getElementById('psub').textContent=ro?'Ansicht':'Gemüse eintragen';
@@ -549,17 +455,22 @@ function renderVGrid(pid){
   g.innerHTML=avail.map(v=>`<span class="chip" onclick="addV('${pid}','${x(v.n)}')" style="background:${v.c}22;border-color:${v.c}">${v.e} ${x(v.n)}</span>`).join('');
 }
 
+function showCatalogModal(){document.getElementById('catalog-modal').style.display='flex';renderCatalogModal();}
+function renderCatalogModal(){
+  document.getElementById('cat-base').innerHTML=BASE.map(v=>`<span class="chip" style="background:${v.c}22;border-color:${v.c};cursor:default">${v.e} ${x(v.n)}</span>`).join('');
+  const cv=window.st.customVeggies||[];
+  document.getElementById('cat-custom-count').textContent=cv.length?`(${cv.length})`:'';
+  document.getElementById('cat-custom').innerHTML=cv.length
+    ?cv.map(v=>`<span class="chip" onclick="removeCustomVeggie('${x(v.name)}')" style="background:${v.color}22;border-color:${v.color}" title="Klicken zum Entfernen">🥬 ${x(v.name)} ×</span>`).join('')
+    :'<div style="color:var(--muted);font-size:12px;padding:4px 0">Keine manuellen Einträge.</div>';
+}
+
 function showModal(id){document.getElementById(id).style.display='flex';}
 function showConfirm(msg,cb){
   document.getElementById('cmsg').textContent=msg;
   document.getElementById('confirm').style.display='flex';
   document.getElementById('cok').onclick=()=>{document.getElementById('confirm').style.display='none';cb();};
 }
-
-// ── Boot ──────────────────────────────────────────────────────────────────────
-const saved=localStorage.getItem('vvc_fb');
-if(saved){dbUrl=saved;showApp();doLoad();}
-else document.getElementById('S').style.display='block';
 </script>
 </body>
 </html>
