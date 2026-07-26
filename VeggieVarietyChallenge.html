@@ -162,14 +162,15 @@ import{getDatabase,ref,get,set,child}from'https://www.gstatic.com/firebasejs/10.
 // ── Firebase Config ───────────────────────────────────────────────────────────
 // Diese Werte aus der Firebase Console kopieren:
 // Projekteinstellungen → Deine Apps → Web-App → Konfiguration
-const FIREBASE_CONFIG = {
-  apiKey:            "DEIN_API_KEY",
-  authDomain:        "DEIN_PROJEKT.firebaseapp.com",
-  databaseURL:       "https://DEIN_PROJEKT-default-rtdb.europe-west1.firebaseio.com",
-  projectId:         "DEIN_PROJEKT",
-  storageBucket:     "DEIN_PROJEKT.appspot.com",
-  messagingSenderId: "DEINE_SENDER_ID",
-  appId:             "DEINE_APP_ID"
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyD4DMJ03xQ_nMlEXJN_PmnZEYb-S-TWExo",
+  authDomain: "veggievarietychallenge-5e121.firebaseapp.com",
+  databaseURL: "https://veggievarietychallenge-5e121-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "veggievarietychallenge-5e121",
+  storageBucket: "veggievarietychallenge-5e121.firebasestorage.app",
+  messagingSenderId: "233079592329",
+  appId: "1:233079592329:web:ad5a9ea492104f3114bd58"
 };
 
 const firebaseApp = initializeApp(FIREBASE_CONFIG);
