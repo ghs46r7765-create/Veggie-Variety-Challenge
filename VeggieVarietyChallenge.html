@@ -129,7 +129,10 @@
 <!-- CATALOG MODAL -->
 <div class="mbg" id="catalog-modal" style="display:none" onclick="this.style.display='none'">
   <div class="modal" onclick="event.stopPropagation()" style="max-width:560px">
-    <h2 style="color:var(--accent);margin-bottom:4px;font-size:17px">🥦 Nahrungsmitteldatenbank</h2>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h2 style="color:var(--accent);font-size:17px">🥦 Nahrungsmitteldatenbank</h2>
+      <div id="cat-sort-toggle" style="display:flex;gap:4px"></div>
+    </div>
     <p style="font-size:11px;color:var(--muted);margin-bottom:16px">Einträge antippen zum Entfernen. Basis-Sorten können nicht gelöscht werden.</p>
     <div class="lbl">Basis-Sorten (40)</div>
     <div id="cat-base" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:16px;max-height:160px;overflow-y:auto"></div>
@@ -160,13 +163,13 @@ import{getDatabase,ref,get,set,child}from'https://www.gstatic.com/firebasejs/10.
 // Diese Werte aus der Firebase Console kopieren:
 // Projekteinstellungen → Deine Apps → Web-App → Konfiguration
 const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyD4DMJ03xQ_nMlEXJN_PmnZEYb-S-TWExo",
-  authDomain: "veggievarietychallenge-5e121.firebaseapp.com",
-  databaseURL: "https://veggievarietychallenge-5e121-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "veggievarietychallenge-5e121",
-  storageBucket: "veggievarietychallenge-5e121.firebasestorage.app",
-  messagingSenderId: "233079592329",
-  appId: "1:233079592329:web:ad5a9ea492104f3114bd58"
+  apiKey:            "DEIN_API_KEY",
+  authDomain:        "DEIN_PROJEKT.firebaseapp.com",
+  databaseURL:       "https://DEIN_PROJEKT-default-rtdb.europe-west1.firebaseio.com",
+  projectId:         "DEIN_PROJEKT",
+  storageBucket:     "DEIN_PROJEKT.appspot.com",
+  messagingSenderId: "DEINE_SENDER_ID",
+  appId:             "DEINE_APP_ID"
 };
 
 const firebaseApp = initializeApp(FIREBASE_CONFIG);
@@ -426,10 +429,15 @@ function renderPlayer(){
   renderVGrid(pid);
 }
 
+// Sortierzustand pro Spieler: 'added' oder 'alpha'
+const sortMode={};
+
 function renderPsum(pid){
   const ro=(openP||{ro:true}).ro;
   const sel=getV(pid,viewW);
   const SH=300,uh=SH/30;
+  const mode=sortMode[pid]||'added';
+  const displayed=mode==='alpha' ? [...sel].sort((a,b)=>a.localeCompare(b,'de')) : sel;
   document.getElementById('psum').innerHTML=`
     <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0">
       <div style="font-size:11px;color:var(--muted)">Fortschritt</div>
@@ -441,10 +449,21 @@ function renderPsum(pid){
         ${sel.length}<span style="font-size:12px;color:var(--muted)">/30</span></div>
     </div>
     <div style="flex:1;min-width:0">
-      <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Eingetragen${ro?'':' · antippen zum Entfernen'}:</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:12px;color:var(--muted)">Eingetragen${ro?'':' · antippen zum Entfernen'}:</div>
+        <div style="display:flex;gap:4px">
+          <button onclick="setSortMode('${pid}','added')" style="font-size:10px;padding:2px 7px;border-radius:4px;cursor:pointer;font-family:Arial,sans-serif;font-weight:600;border:1px solid var(--accent);background:${mode==='added'?'var(--accent)':'transparent'};color:${mode==='added'?'var(--bg)':'var(--accent)'}">Reihenfolge</button>
+          <button onclick="setSortMode('${pid}','alpha')" style="font-size:10px;padding:2px 7px;border-radius:4px;cursor:pointer;font-family:Arial,sans-serif;font-weight:600;border:1px solid var(--accent);background:${mode==='alpha'?'var(--accent)':'transparent'};color:${mode==='alpha'?'var(--bg)':'var(--accent)'}">A–Z</button>
+        </div>
+      </div>
       ${!sel.length?'<div style="color:var(--muted);font-size:13px">Noch keine Einträge.</div>':''}
-      <div>${sel.map(n=>{const v=findV(n);return`<span class="chip" onclick="${ro?'':`remV('${pid}','${x(n)}')`}" style="background:${v.c}28;border-color:${v.c};cursor:${ro?'default':'pointer'}">${v.e} ${x(n)}${ro?'':' ×'}</span>`;}).join('')}</div>
+      <div>${displayed.map(n=>{const v=findV(n);return`<span class="chip" onclick="${ro?'':`remV('${pid}','${x(n)}')`}" style="background:${v.c}28;border-color:${v.c};cursor:${ro?'default':'pointer'}">${v.e} ${x(n)}${ro?'':' ×'}</span>`;}).join('')}</div>
     </div>`;
+}
+
+function setSortMode(pid,mode){
+  sortMode[pid]=mode;
+  renderPsum(pid);
 }
 
 function renderVGrid(pid){
@@ -455,14 +474,28 @@ function renderVGrid(pid){
   g.innerHTML=avail.map(v=>`<span class="chip" onclick="addV('${pid}','${x(v.n)}')" style="background:${v.c}22;border-color:${v.c}">${v.e} ${x(v.n)}</span>`).join('');
 }
 
+let catSortMode='added';
+
 function showCatalogModal(){document.getElementById('catalog-modal').style.display='flex';renderCatalogModal();}
 function renderCatalogModal(){
-  document.getElementById('cat-base').innerHTML=BASE.map(v=>`<span class="chip" style="background:${v.c}22;border-color:${v.c};cursor:default">${v.e} ${x(v.n)}</span>`).join('');
+  const baseList=catSortMode==='alpha' ? [...BASE].sort((a,b)=>a.n.localeCompare(b.n,'de')) : BASE;
+  document.getElementById('cat-base').innerHTML=baseList.map(v=>`<span class="chip" style="background:${v.c}22;border-color:${v.c};cursor:default">${v.e} ${x(v.n)}</span>`).join('');
   const cv=window.st.customVeggies||[];
+  const cvList=catSortMode==='alpha' ? [...cv].sort((a,b)=>a.name.localeCompare(b.name,'de')) : cv;
   document.getElementById('cat-custom-count').textContent=cv.length?`(${cv.length})`:'';
   document.getElementById('cat-custom').innerHTML=cv.length
-    ?cv.map(v=>`<span class="chip" onclick="removeCustomVeggie('${x(v.name)}')" style="background:${v.color}22;border-color:${v.color}" title="Klicken zum Entfernen">🥬 ${x(v.name)} ×</span>`).join('')
+    ?cvList.map(v=>`<span class="chip" onclick="removeCustomVeggie('${x(v.name)}')" style="background:${v.color}22;border-color:${v.color}" title="Klicken zum Entfernen">🥬 ${x(v.name)} ×</span>`).join('')
     :'<div style="color:var(--muted);font-size:12px;padding:4px 0">Keine manuellen Einträge.</div>';
+  // Sort toggle buttons
+  const tb=document.getElementById('cat-sort-toggle');
+  if(tb) tb.innerHTML=sortToggleHTML('catSortMode');
+}
+
+function setCatSortMode(mode){catSortMode=mode;renderCatalogModal();}
+function sortToggleHTML(v){
+  const m=v==='catSortMode'?catSortMode:'added';
+  return `<button onclick="setCatSortMode('added')" style="font-size:10px;padding:2px 7px;border-radius:4px;cursor:pointer;font-family:Arial,sans-serif;font-weight:600;border:1px solid var(--accent);background:${m==='added'?'var(--accent)':'transparent'};color:${m==='added'?'var(--bg)':'var(--accent)'}">Reihenfolge</button>
+  <button onclick="setCatSortMode('alpha')" style="font-size:10px;padding:2px 7px;border-radius:4px;cursor:pointer;font-family:Arial,sans-serif;font-weight:600;border:1px solid var(--accent);background:${m==='alpha'?'var(--accent)':'transparent'};color:${m==='alpha'?'var(--bg)':'var(--accent)'}">A–Z</button>`;
 }
 
 function showModal(id){document.getElementById(id).style.display='flex';}
