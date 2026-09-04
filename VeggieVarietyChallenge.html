@@ -162,15 +162,14 @@ import{getDatabase,ref,get,set,child}from'https://www.gstatic.com/firebasejs/10.
 // ── Firebase Config ───────────────────────────────────────────────────────────
 // Diese Werte aus der Firebase Console kopieren:
 // Projekteinstellungen → Deine Apps → Web-App → Konfiguration
-// Your web app's Firebase configuration
 const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyD4DMJ03xQ_nMlEXJN_PmnZEYb-S-TWExo",
-  authDomain: "veggievarietychallenge-5e121.firebaseapp.com",
-  databaseURL: "https://veggievarietychallenge-5e121-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "veggievarietychallenge-5e121",
-  storageBucket: "veggievarietychallenge-5e121.firebasestorage.app",
-  messagingSenderId: "233079592329",
-  appId: "1:233079592329:web:ad5a9ea492104f3114bd58"
+  apiKey:            "DEIN_API_KEY",
+  authDomain:        "DEIN_PROJEKT.firebaseapp.com",
+  databaseURL:       "https://DEIN_PROJEKT-default-rtdb.europe-west1.firebaseio.com",
+  projectId:         "DEIN_PROJEKT",
+  storageBucket:     "DEIN_PROJEKT.appspot.com",
+  messagingSenderId: "DEINE_SENDER_ID",
+  appId:             "DEINE_APP_ID"
 };
 
 const firebaseApp = initializeApp(FIREBASE_CONFIG);
@@ -252,7 +251,7 @@ window.fbSet = async function(path, value){
   await set(ref(db, 'veggie/'+path), value);
 };
 
-window.saveVeggies     = async(pid,v)=>{ setStatus('speichert…'); try{ await fbSet('weeks/'+curW+'/'+pid,v); setStatus('✓'); setTimeout(()=>setStatus(''),2000); }catch(e){setStatus('⚠');console.error(e);} };
+window.saveVeggies     = async(pid,v)=>{ setStatus('speichert…'); try{ await fbSet('weeks/'+viewW+'/'+pid,v); setStatus('✓'); setTimeout(()=>setStatus(''),2000); }catch(e){setStatus('⚠');console.error(e);} };
 window.saveParticipants= async()=>     { setStatus('speichert…'); try{ await fbSet('participants',window.st.participants); setStatus('✓'); setTimeout(()=>setStatus(''),2000); }catch(e){setStatus('⚠');console.error(e);} };
 window.saveCustomVeggies=async()=>     { setStatus('speichert…'); try{ await fbSet('customVeggies',window.st.customVeggies||[]); setStatus('✓'); setTimeout(()=>setStatus(''),2000); }catch(e){setStatus('⚠');console.error(e);} };
 
@@ -329,12 +328,12 @@ function removePart(pid,pname){
 
 function getV(pid,wk){return(window.st.weeks[wk]||{})[pid]||[];}
 function setV(pid,veggies){
-  if(!window.st.weeks[curW])window.st.weeks[curW]={};
-  window.st.weeks[curW][pid]=veggies;
+  if(!window.st.weeks[viewW])window.st.weeks[viewW]={};
+  window.st.weeks[viewW][pid]=veggies;
   saveVeggies(pid,veggies);renderPsum(pid);renderLB();renderVGrid(pid);
 }
-function addV(pid,name){const c=getV(pid,curW);if(!c.includes(name))setV(pid,[...c,name]);}
-function remV(pid,name){setV(pid,getV(pid,curW).filter(v=>v!==name));}
+function addV(pid,name){const c=getV(pid,viewW);if(!c.includes(name))setV(pid,[...c,name]);}
+function remV(pid,name){setV(pid,getV(pid,viewW).filter(v=>v!==name));}
 
 function addCustom(pid){
   const inp=document.getElementById('ci');
@@ -397,7 +396,7 @@ function renderLB(){
     const bg=done?'linear-gradient(90deg,var(--dim),var(--accent))':'linear-gradient(90deg,#1e4a10,var(--dim))';
     return`<div class="lrow">
       <div style="width:28px;text-align:center;font-size:15px;flex-shrink:0">${i<3?rnk[i]:'#'+(i+1)}</div>
-      <div onclick="openPP('${p.id}',${!isCur})" style="width:110px;font-size:13px;color:${isCur?'var(--accent)':'var(--text)'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;flex-shrink:0;text-decoration:${isCur?'underline dotted':'none'}">${x(p.name)}</div>
+      <div onclick="openPP('${p.id}',false)" style="width:110px;font-size:13px;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;flex-shrink:0;text-decoration:underline dotted">${x(p.name)}</div>
       <div class="bwrap" onclick="openPP('${p.id}',${!isCur})"><div class="bfill" style="width:${pct}%;background:${bg}">${cnt>3?cnt+'/30':''}</div></div>
       <div style="width:38px;text-align:right;font-size:12px;color:${done?'var(--accent)':'var(--muted)'};flex-shrink:0">${done?'✅':cnt+'/30'}</div>
       ${isCur?`<button class="btn d sm" onclick="event.stopPropagation();removePart('${p.id}','${x(p.name)}')">✕</button>`:''}
@@ -405,18 +404,18 @@ function renderLB(){
   }).join('');
 }
 
-function openPP(pid,ro){openP={id:pid,ro};render();}
+function openPP(pid,ro){openP={id:pid,ro:false};render();}
 function closePage(){openP=null;render();}
 
 function renderPlayer(){
   const{id:pid,ro}=openP;
   const p=window.st.participants.find(q=>q.id===pid);
   if(!p){closePage();return;}
-  document.getElementById('ptitle').textContent=(ro?'👁 ':'✏️ ')+p.name;
-  document.getElementById('psub').textContent=ro?'Ansicht':'Gemüse eintragen';
+  document.getElementById('ptitle').textContent='✏️ '+p.name;
+  document.getElementById('psub').textContent='Gemüse eintragen';
   renderPsum(pid);
   const pe=document.getElementById('pedit');
-  if(ro){pe.innerHTML='';return;}
+  // always editable
   pe.innerHTML=`
     <div class="card"><div class="lbl">Aus der Liste</div>
       <input id="vs" type="text" placeholder="Suchen…" oninput="renderVGrid('${pid}')">
@@ -434,7 +433,6 @@ function renderPlayer(){
 const sortMode={};
 
 function renderPsum(pid){
-  const ro=(openP||{ro:true}).ro;
   const sel=getV(pid,viewW);
   const SH=300,uh=SH/30;
   const mode=sortMode[pid]||'added';
@@ -451,14 +449,14 @@ function renderPsum(pid){
     </div>
     <div style="flex:1;min-width:0">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-        <div style="font-size:12px;color:var(--muted)">Eingetragen${ro?'':' · antippen zum Entfernen'}:</div>
+        <div style="font-size:12px;color:var(--muted)">Eingetragen · antippen zum Entfernen:</div>
         <div style="display:flex;gap:4px">
           <button onclick="setSortMode('${pid}','added')" style="font-size:10px;padding:2px 7px;border-radius:4px;cursor:pointer;font-family:Arial,sans-serif;font-weight:600;border:1px solid var(--accent);background:${mode==='added'?'var(--accent)':'transparent'};color:${mode==='added'?'var(--bg)':'var(--accent)'}">Reihenfolge</button>
           <button onclick="setSortMode('${pid}','alpha')" style="font-size:10px;padding:2px 7px;border-radius:4px;cursor:pointer;font-family:Arial,sans-serif;font-weight:600;border:1px solid var(--accent);background:${mode==='alpha'?'var(--accent)':'transparent'};color:${mode==='alpha'?'var(--bg)':'var(--accent)'}">A–Z</button>
         </div>
       </div>
       ${!sel.length?'<div style="color:var(--muted);font-size:13px">Noch keine Einträge.</div>':''}
-      <div>${displayed.map(n=>{const v=findV(n);return`<span class="chip" onclick="${ro?'':`remV('${pid}','${x(n)}')`}" style="background:${v.c}28;border-color:${v.c};cursor:${ro?'default':'pointer'}">${v.e} ${x(n)}${ro?'':' ×'}</span>`;}).join('')}</div>
+      <div>${displayed.map(n=>{const v=findV(n);return`<span class="chip" onclick="remV('${pid}','${x(n)}')" style="background:${v.c}28;border-color:${v.c};cursor:pointer">${v.e} ${x(n)} ×</span>`;}).join('')}</div>
     </div>`;
 }
 
@@ -470,7 +468,7 @@ function setSortMode(pid,mode){
 function renderVGrid(pid){
   const q=(document.getElementById('vs')?.value||'').toLowerCase();
   const sel=getV(pid,viewW);
-  const avail=allCat().filter(v=>!sel.includes(v.n)&&v.n.toLowerCase().includes(q));
+  const avail=allCat().filter(v=>!sel.includes(v.n)&&v.n.toLowerCase().includes(q)).sort((a,b)=>a.n.localeCompare(b.n,'de'));
   const g=document.getElementById('vg');if(!g)return;
   g.innerHTML=avail.map(v=>`<span class="chip" onclick="addV('${pid}','${x(v.n)}')" style="background:${v.c}22;border-color:${v.c}">${v.e} ${x(v.n)}</span>`).join('');
 }
