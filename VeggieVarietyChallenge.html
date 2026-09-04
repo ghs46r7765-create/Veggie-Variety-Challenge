@@ -499,6 +499,15 @@ function showConfirm(msg,cb){
   document.getElementById('confirm').style.display='flex';
   document.getElementById('cok').onclick=()=>{document.getElementById('confirm').style.display='none';cb();};
 }
+
+// Expose ALL functions called from HTML onclick/oninput/onkeydown to global scope
+// Required because type="module" creates an isolated scope
+['addCustom','addV','chWeek','closePage','downloadBackup','openPP',
+ 'register','remV','removeCustomVeggie','removePart','renderCatalogModal',
+ 'renderVGrid','setCatSortMode','setSortMode','showCatalogModal','showModal',
+ 'showConfirm','x'].forEach(fn=>{
+  if(typeof eval(fn)==='function') window[fn]=eval(fn);
+});
 </script>
 </body>
 </html>
