@@ -160,18 +160,16 @@ import{getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged}from'https:
 import{getDatabase,ref,get,set,child}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
 
 // ── Firebase Config ───────────────────────────────────────────────────────────
-// Diese Werte aus der Firebase Console kopieren:
-// Projekteinstellungen → Deine Apps → Web-App → Konfiguration
 const FIREBASE_CONFIG = {
-apiKey: “AIzaSyD4DMJ03xQ_nMlEXJN_PmnZEYb-S-TWExo”,
-authDomain: “veggievarietychallenge-5e121.firebaseapp.com”,
-databaseURL: “https://veggievarietychallenge-5e121-default-rtdb.europe-west1.firebasedatabase.app”,
-projectId: “veggievarietychallenge-5e121”,
-storageBucket: “veggievarietychallenge-5e121.firebasestorage.app”,
-messagingSenderId: “233079592329”,
-appId: “1:233079592329:web:ad5a9ea492104f3114bd58”
+  apiKey:            "AIzaSyD4DMJ03xQ_nMlEXJN_PmnZEYb-S-TWExo",
+  authDomain:        "veggievarietychallenge-5e121.firebaseapp.com",
+  databaseURL:       "https://veggievarietychallenge-5e121-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:         "veggievarietychallenge-5e121",
+  storageBucket:     "veggievarietychallenge-5e121.firebasestorage.app",
+  messagingSenderId: "233079592329",
+  appId:             "1:233079592329:web:ad5a9ea492104f3114bd58"
 };
- 
+
 const firebaseApp = initializeApp(FIREBASE_CONFIG);
 const auth        = getAuth(firebaseApp);
 const db          = getDatabase(firebaseApp);
