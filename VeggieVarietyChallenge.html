@@ -253,9 +253,7 @@ window.saveVeggies     = async(pid,v)=>{ setStatus('speichert…'); try{ await f
 window.saveParticipants= async()=>     { setStatus('speichert…'); try{ await fbSet('participants',window.st.participants); setStatus('✓'); setTimeout(()=>setStatus(''),2000); }catch(e){setStatus('⚠');console.error(e);} };
 window.saveCustomVeggies=async()=>     { setStatus('speichert…'); try{ await fbSet('customVeggies',window.st.customVeggies||[]); setStatus('✓'); setTimeout(()=>setStatus(''),2000); }catch(e){setStatus('⚠');console.error(e);} };
 
-</script>
 
-<script>
 // ── Katalog ──────────────────────────────────────────────────────────────────
 const BASE=[
   {n:"Tomate",c:"#e74c3c",e:"🍅"},{n:"Gurke",c:"#27ae60",e:"🥒"},
